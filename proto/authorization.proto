@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package authz;
+
+service AuthorizationService {
+  rpc Check (CheckRequest) returns (CheckResponse);
+  rpc Expand (ExpandRequest) returns (ExpandResponse);
+  rpc WriteRelationships (WriteRelationshipsRequest) returns (WriteRelationshipsResponse);
+  rpc DeleteRelationships (DeleteRelationshipsRequest) returns (DeleteRelationshipsResponse);
+  rpc ReadRelationships (ReadRelationshipsRequest) returns (ReadRelationshipsResponse);
+}
+
+message Subject {
+  string namespace = 1;
+  string object_id = 2;
+  string relation = 3;
+}
+
+message Resource {
+  string namespace = 1;
+  string object_id = 2;
+}
+
+message CheckRequest {
+  Resource resource = 1;
+  string relation = 2;
+  Subject subject = 3;
+  string consistency_token = 4;
+}
+
+message CheckResponse {
+  bool allowed = 1;
+  string consistency_token = 2;
+}
+
+message Relationship {
+  Resource resource = 1;
+  string relation = 2;
+  Subject subject = 3;
+}
+
+message WriteRelationshipsRequest {
+  repeated Relationship relationships = 1;
+}
+
+message WriteRelationshipsResponse {
+  string consistency_token = 1;
+}
+
+message DeleteRelationshipsRequest {
+  repeated Relationship relationships = 1;
+}
+
+message DeleteRelationshipsResponse {
+  string consistency_token = 1;
+}
+
+message ReadRelationshipsRequest {
+  Resource resource = 1;
+  string relation = 2;
+  Subject subject = 3;
+  string consistency_token = 4;
+}
+
+message ReadRelationshipsResponse {
+  repeated Relationship relationships = 1;
+  string consistency_token = 2;
+}
+
+message ExpandRequest {
+  Resource resource = 1;
+  string relation = 2;
+  string consistency_token = 3;
+}
+
+message ExpandResponse {
+  // Representation of a tree
+  message TreeNode {
+    oneof node_type {
+      Subject leaf = 1;
+      TreeNodes union = 2;
+      TreeNodes intersection = 3;
+      TreeNodes exclusion = 4;
+    }
+  }
+  
+  message TreeNodes {
+    repeated TreeNode nodes = 1;
+  }
+  
+  TreeNode tree = 1;
+}
