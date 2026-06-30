@@ -5,6 +5,7 @@ import { PermissionCacheService } from './cache.service';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Tuple } from './tuple.entity';
+import { Outbox } from './outbox.entity';
 
 @Controller()
 export class AuthorizationController {
@@ -62,6 +63,20 @@ export class AuthorizationController {
         tuple.subject_relation = rel.subject.relation || null;
         
         await queryRunner.manager.save(tuple);
+
+        const outbox = new Outbox();
+        outbox.aggregate_type = 'relationship';
+        outbox.aggregate_id = tuple.id; // Or a composite identifier
+        outbox.event_type = 'relationship-created';
+        outbox.payload = {
+          tenantId: tuple.tenant_id,
+          resource: { namespace: tuple.resource_namespace, objectId: tuple.resource_id },
+          relation: tuple.relation,
+          subject: { namespace: tuple.subject_namespace, objectId: tuple.subject_id, relation: tuple.subject_relation }
+        };
+
+        await queryRunner.manager.save(outbox);
+        
         await this.cacheService.invalidate('default-tenant', rel.resource.namespace, rel.resource.object_id);
       }
       

@@ -5,6 +5,7 @@ import { AuthorizationController } from './authorization.controller';
 import { GraphService } from './graph.service';
 import { PermissionCacheService } from './cache.service';
 import { Tuple } from './tuple.entity';
+import { Outbox } from './outbox.entity';
 import { createKeyv } from '@keyv/redis';
 
 @Module({
@@ -16,10 +17,10 @@ import { createKeyv } from '@keyv/redis';
       username: process.env.DB_USER || 'authz',
       password: process.env.DB_PASSWORD || 'password',
       database: process.env.DB_NAME || 'authz',
-      entities: [Tuple],
+      entities: [Tuple, Outbox],
       synchronize: true, // Use migrations in production
     }),
-    TypeOrmModule.forFeature([Tuple]),
+    TypeOrmModule.forFeature([Tuple, Outbox]),
     CacheModule.registerAsync({
       useFactory: () => {
         return {
